@@ -2,12 +2,18 @@
 
 import React, { forwardRef } from 'react';
 import { useResumeStore } from '@/lib/store';
+import type { ResumeSection } from '@/lib/types';
 
 const ResumePreview = forwardRef<HTMLDivElement>((props, ref) => {
     const resumeData = useResumeStore((state) => state.resumeData);
+    const updateSection = useResumeStore((state) => state.updateSection);
     const { name, contact, summary, experience, projects, education, skills } = resumeData;
 
-    const renderSection = (title: string, content: string) => {
+    const handleContentChange = (section: ResumeSection, e: React.FormEvent<HTMLDivElement>) => {
+        updateSection(section, e.currentTarget.innerText);
+    };
+
+    const renderSection = (title: string, content: string, sectionKey: ResumeSection) => {
         if (!content.trim()) return null;
         return (
             <div className="mb-6">
@@ -23,7 +29,15 @@ const ResumePreview = forwardRef<HTMLDivElement>((props, ref) => {
                 >
                     {title}
                 </h2>
-                <div className="text-xs text-gray-800 whitespace-pre-wrap">{content}</div>
+                <div 
+                    contentEditable
+                    suppressContentEditableWarning={true}
+                    onBlur={(e) => handleContentChange(sectionKey, e)}
+                    className="text-xs text-gray-800 whitespace-pre-wrap"
+                    style={{ outline: 'none' }}
+                >
+                    {content}
+                </div>
             </div>
         );
     }
@@ -44,15 +58,31 @@ const ResumePreview = forwardRef<HTMLDivElement>((props, ref) => {
             className="bg-white text-black font-sans"
         >
             <div style={{ textAlign: 'center' }} className="mb-8">
-                <h1 style={{ color: '#1e3a8a' }} className="text-2xl font-bold">{name}</h1>
-                <p className="text-xs text-gray-600">{contact}</p>
+                <h1 
+                    contentEditable
+                    suppressContentEditableWarning={true}
+                    onBlur={(e) => handleContentChange('name', e)}
+                    style={{ color: '#1e3a8a', outline: 'none' }} 
+                    className="text-2xl font-bold"
+                >
+                    {name}
+                </h1>
+                <p 
+                    contentEditable
+                    suppressContentEditableWarning={true}
+                    onBlur={(e) => handleContentChange('contact', e)}
+                    className="text-xs text-gray-600"
+                    style={{ outline: 'none' }}
+                >
+                    {contact}
+                </p>
             </div>
 
-            {renderSection('Summary', summary)}
-            {renderSection('Experience', experience)}
-            {renderSection('Projects', projects)}
-            {renderSection('Education', education)}
-            {renderSection('Skills', skills)}
+            {renderSection('Summary', summary, 'summary')}
+            {renderSection('Experience', experience, 'experience')}
+            {renderSection('Projects', projects, 'projects')}
+            {renderSection('Education', education, 'education')}
+            {renderSection('Skills', skills, 'skills')}
         </div>
     );
 });
