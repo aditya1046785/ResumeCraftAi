@@ -29,7 +29,7 @@ const ResumePreview = forwardRef<HTMLDivElement>((props, ref) => {
 
     return (
         <div ref={ref} id="resume-preview">
-            <div style={{ padding: '0.5in', border: '1px solid #ccc' }} className="bg-white shadow-lg text-black font-sans print:shadow-none">
+            <div style={{ padding: '0.5in', border: '1px solid #e5e7eb', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }} className="bg-white shadow-lg text-black font-sans">
                 <div style={{ textAlign: 'center' }} className="mb-4">
                     <h1 className="text-2xl font-bold text-gray-800">{name}</h1>
                     <p className="text-xs text-gray-600">{contact}</p>
