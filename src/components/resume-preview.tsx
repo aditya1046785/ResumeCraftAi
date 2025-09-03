@@ -12,7 +12,7 @@ const ResumePreview = forwardRef<HTMLDivElement>((props, ref) => {
         return (
             <div className="mb-4">
                 <h2 className="text-sm font-bold uppercase border-b border-gray-400 pb-1 mb-2 text-gray-700">{title}</h2>
-                <div className="text-xs text-gray-800 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: content.replace(/\n- /g, '<br/>&bull; ').replace(/^- /g, '&bull; ') }}></div>
+                <div className="text-xs text-gray-800 whitespace-pre-wrap">{content}</div>
             </div>
         );
     }

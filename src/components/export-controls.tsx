@@ -18,7 +18,19 @@ export function ExportControls({ previewRef }: ExportControlsProps) {
         const printWindow = window.open('', '', 'height=800,width=800');
 
         if (printWindow) {
-            const resumeHTML = previewRef.current.outerHTML;
+            const resumeHTML = previewRef.current.innerHTML;
+            const styles = Array.from(document.styleSheets)
+                .map((styleSheet) => {
+                    try {
+                        return Array.from(styleSheet.cssRules)
+                            .map((rule) => rule.cssText)
+                            .join('');
+                    } catch (e) {
+                        console.warn('Could not read stylesheet rules:', e);
+                        return '';
+                    }
+                })
+                .join('');
             
             printWindow.document.write(`
                 <html>
@@ -27,9 +39,9 @@ export function ExportControls({ previewRef }: ExportControlsProps) {
                         <link rel="preconnect" href="https://fonts.googleapis.com" />
                         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
                         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-                        <link rel="stylesheet" href="/print.css">
+                        <style>${styles}</style>
                     </head>
-                    <body>
+                    <body style="margin: 0; padding: 0;">
                         ${resumeHTML}
                     </body>
                 </html>
