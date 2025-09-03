@@ -87,27 +87,27 @@ body {
   }
 }
 
+@page {
+  size: A4;
+  margin: 1in;
+}
+
 @media print {
-  body.printing * {
-    visibility: hidden;
-  }
-
-  body.printing #resume-preview,
-  body.printing #resume-preview * {
-    visibility: visible;
-  }
-
-  body.printing #resume-preview {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    box-shadow: none;
-    border: none;
+  body {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+  
+  #resume-preview {
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
   }
 }
