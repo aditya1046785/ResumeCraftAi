@@ -27,44 +27,35 @@ export function ExportControls({ previewRef }: ExportControlsProps) {
 
         if (printWindow) {
             const resumeHTML = previewRef.current.innerHTML;
-            
-            // Gather all styles from the current document
-            const styles = Array.from(document.styleSheets)
-                .map((styleSheet) => {
-                    try {
-                        return Array.from(styleSheet.cssRules)
-                            .map((rule) => rule.cssText)
-                            .join('');
-                    } catch (e) {
-                        console.warn('Could not read stylesheet rules:', e);
-                        return '';
-                    }
-                })
-                .join('');
+            const originalDocument = window.document;
+            const printDocument = printWindow.document;
 
-            printWindow.document.write(`
+            printDocument.open();
+            printDocument.write(`
                 <html>
                     <head>
                         <title>Print Resume</title>
-                        <link rel="preconnect" href="https://fonts.googleapis.com" />
-                        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-                        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-                        <style>${styles}</style>
                     </head>
-                    <body style="margin: 0; padding: 0;">
+                    <body>
                         ${resumeHTML}
                     </body>
                 </html>
             `);
 
-            printWindow.document.close();
+            // Find all stylesheets and style tags in the original document and append them to the new window's head
+            const styles = originalDocument.querySelectorAll('link[rel="stylesheet"], style');
+            styles.forEach(style => {
+                printDocument.head.appendChild(style.cloneNode(true));
+            });
+            
+            printDocument.close();
             
             printWindow.onload = () => {
               setTimeout(() => {
                   printWindow.focus();
                   printWindow.print();
                   printWindow.close();
-              }, 250); // A small delay to ensure styles are applied
+              }, 250); // A small delay is crucial to ensure all styles are rendered
             };
         } else {
             toast({
