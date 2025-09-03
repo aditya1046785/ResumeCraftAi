@@ -38,7 +38,7 @@ function BuildPageContent() {
     setError(null);
     try {
       // Use a fresh, empty history for the initial call
-      const result = await askResumeQuestion({ resumeData: useResumeStore.getState().resumeData, history: [] });
+      const result = await askResumeQuestion({ history: [] });
       addMessage({ role: 'model', text: result.question });
     } catch (e: any) {
         if (e.message && (e.message.includes('503') || e.message.includes('overloaded'))) {
@@ -90,10 +90,12 @@ function BuildPageContent() {
     setError(null);
 
     try {
-      const result = await askResumeQuestion({ resumeData, history: currentHistory });
-      setResumeData(result.updatedResumeData);
+      const result = await askResumeQuestion({ history: currentHistory });
+      
       addMessage({ role: 'model', text: result.question });
+      
       if (result.isComplete) {
+        setResumeData(result.updatedResumeData);
         setIsComplete(true);
       }
     } catch (e: any) {

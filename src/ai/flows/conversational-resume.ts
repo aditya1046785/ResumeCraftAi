@@ -9,7 +9,6 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import type {ResumeData} from '@/lib/types';
 
 const MessageSchema = z.object({
   role: z.enum(['user', 'model']),
@@ -17,15 +16,6 @@ const MessageSchema = z.object({
 });
 
 const ConversationalResumeInputSchema = z.object({
-  resumeData: z.object({
-    name: z.string(),
-    contact: z.string(),
-    summary: z.string(),
-    experience: z.string(),
-    education: z.string(),
-    projects: z.string(),
-    skills: z.string(),
-  }),
   history: z.array(MessageSchema),
 });
 
@@ -34,15 +24,15 @@ export type ConversationalResumeInput = z.infer<typeof ConversationalResumeInput
 const ConversationalResumeOutputSchema = z.object({
   question: z.string().describe("The next question to ask the user to gather more information for their resume. If all information is gathered, this should be a concluding remark."),
   updatedResumeData: z.object({
-    name: z.string(),
-    contact: z.string(),
-    summary: z.string(),
-    experience: z.string(),
-    education: z.string(),
-    projects: z.string(),
-    skills: z.string(),
-  }).describe("The updated resume data based on the user's last response. Only update fields that were directly addressed in the last user message. Keep existing data if not mentioned."),
-  isComplete: z.boolean().describe("Set to true only when all necessary resume sections (name, contact, summary, experience, education, skills) are filled and sufficient."),
+    name: z.string().describe("The user's full name. Extracted from the conversation."),
+    contact: z.string().describe("The user's contact information (email, phone, LinkedIn). Extracted from the conversation."),
+    summary: z.string().describe("A professional summary. Generated from the conversation."),
+    experience: z.string().describe("The user's work experience. Extracted and formatted from the conversation."),
+    education: z.string().describe("The user's educational background. Extracted from the conversation."),
+    projects: z.string().describe("The user's projects. Extracted from the conversation."),
+    skills: z.string().describe("The user's skills. Extracted from the conversation."),
+  }).describe("The complete, updated resume data. This should only be populated once the conversation is complete and all necessary information has been gathered."),
+  isComplete: z.boolean().describe("Set to true only when all necessary resume sections (name, contact, summary, experience, education, skills) have been sufficiently filled through the conversation."),
 });
 
 export type ConversationalResumeOutput = z.infer<typeof ConversationalResumeOutputSchema>;
@@ -58,28 +48,23 @@ const resumePrompt = ai.definePrompt({
   name: 'conversationalResumePrompt',
   input: {schema: ConversationalResumeInputSchema},
   output: {schema: ConversationalResumeOutputSchema},
-  prompt: `You are a friendly and professional AI career coach building a resume with a user through conversation.
-Your goal is to gather all the necessary information for a standard tech resume.
+  prompt: `You are a friendly and professional AI career coach. Your goal is to build a complete resume with the user through a natural, free-flowing conversation.
 
-**Conversation Rules:**
-1.  **One Question at a Time:** Ask only one question at a time to keep the conversation focused.
-2.  **Be Personal and Encouraging:** Use a warm and supportive tone.
-3.  **Analyze User Response:** The user's last message is in the history. Use it to update the resume JSON. Only change fields relevant to the last message.
-4.  **Check for Missing Information:** Look at the 'updatedResumeData' JSON to see what's missing.
-5.  **Determine Next Question:** Based on the missing information, ask the next logical question. Start with name, then contact, summary, experience, education, projects, and finally skills.
-6.  **Mark as Complete:** Once all sections are reasonably filled, set \`isComplete\` to \`true\` and provide a concluding remark as the final \`question\`.
-
-**Current Resume Data:**
-\`\`\`json
-{{{json resumeData}}}
-\`\`\`
+**Your Task:**
+1.  **Engage in Conversation:** Have a natural, multi-turn conversation. Start with basics like name and contact, then move to summary, experience, education, projects, and skills.
+2.  **Gather Information Holistically:** Do not treat this as a simple form. Ask clarifying questions or follow-ups to get good, detailed information. For example, for a job, ask about their responsibilities and key achievements.
+3.  **Keep Track of Progress:** Mentally track which sections you have sufficient information for.
+4.  **Determine the Next Question:** Based on what information is still missing, ask the next logical question. Keep it to one main question at a time.
+5.  **Signal Completion:** Once you are satisfied that you have gathered all the necessary information for a strong resume, set \`isComplete\` to \`true\`.
+6.  **Populate Resume AT THE END:** The \`updatedResumeData\` field should remain empty (all fields as empty strings) throughout the conversation. Only when you set \`isComplete\` to \`true\`, you must populate ALL fields in \`updatedResumeData\` with the information gathered from the entire conversation.
+7.  **Concluding Remark:** When \`isComplete\` is true, the \`question\` field should contain a concluding remark, like "Thanks! I've drafted your resume based on our conversation. You can see it in the preview."
 
 **Conversation History:**
 {{#each history}}
 **{{role}}**: {{text}}
 {{/each}}
 
-Based on the history and current data, update the resume data and ask the next question.
+Based on the full conversation history, determine if you have enough information. If not, ask the next question. If yes, set \`isComplete\` to true and fill out the entire \`updatedResumeData\` object.
 `,
 });
 
@@ -91,11 +76,21 @@ const conversationalResumeFlow = ai.defineFlow(
     outputSchema: ConversationalResumeOutputSchema,
   },
   async (input) => {
+    const emptyResume = {
+        name: "",
+        contact: "",
+        summary: "",
+        experience: "",
+        education: "",
+        projects: "",
+        skills: "",
+    };
+
     // If history is empty, start the conversation.
     if (input.history.length === 0) {
       return {
         question: "Hello! I'm here to help you build a great resume. Let's start with your full name, please.",
-        updatedResumeData: input.resumeData,
+        updatedResumeData: emptyResume,
         isComplete: false,
       };
     }
