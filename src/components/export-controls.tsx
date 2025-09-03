@@ -27,7 +27,6 @@ export function ExportControls({ previewRef }: ExportControlsProps) {
 
         if (printWindow) {
             const resumeHTML = previewRef.current.innerHTML;
-            const originalDocument = window.document;
             const printDocument = printWindow.document;
 
             printDocument.open();
@@ -42,8 +41,8 @@ export function ExportControls({ previewRef }: ExportControlsProps) {
                 </html>
             `);
 
-            // Find all stylesheets and style tags in the original document and append them to the new window's head
-            const styles = originalDocument.querySelectorAll('link[rel="stylesheet"], style');
+            // Find all stylesheets and font links in the original document and append them to the new window's head
+            const styles = document.querySelectorAll('link[rel="stylesheet"], style');
             styles.forEach(style => {
                 printDocument.head.appendChild(style.cloneNode(true));
             });
