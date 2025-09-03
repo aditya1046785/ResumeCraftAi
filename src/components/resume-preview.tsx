@@ -19,26 +19,6 @@ const ResumePreview = forwardRef<HTMLDivElement>((props, ref) => {
 
     return (
         <div ref={ref} className="bg-white p-6 shadow-lg text-black font-sans print:shadow-none" id="resume-preview">
-             <style jsx global>{`
-                @media print {
-                    body {
-                        background-color: #fff;
-                    }
-                    .no-print {
-                        display: none;
-                    }
-                    #resume-preview {
-                        position: absolute;
-                        left: 0;
-                        top: 0;
-                        width: 100%;
-                        height: auto;
-                        box-shadow: none;
-                        margin: 0;
-                        padding: 0;
-                    }
-                }
-            `}</style>
             <div className="text-center mb-4">
                 <h1 className="text-2xl font-bold text-gray-800">{name}</h1>
                 <p className="text-xs text-gray-600">{contact}</p>

@@ -86,3 +86,30 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@media print {
+  body {
+    background-color: #fff;
+  }
+  .no-print, .no-print * {
+    display: none !important;
+  }
+  #resume-preview {
+    display: block !important;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: auto;
+    box-shadow: none;
+    margin: 0;
+    padding: 0;
+    border: none;
+  }
+  main > div {
+    display: none !important;
+  }
+  main > div #resume-container {
+    display: block !important;
+  }
+}
