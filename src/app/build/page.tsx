@@ -27,7 +27,8 @@ function BuildPageContent() {
   const [isComplete, setIsComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [userInput, setUserInput] = useState('');
-  
+  const [isInitialized, setIsInitialized] = useState(false);
+
   const previewRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
@@ -48,30 +49,21 @@ function BuildPageContent() {
   
   // Start conversation on component mount only if history is empty
   useEffect(() => {
-    // Zustand's persistence is asynchronous, so we need to wait for rehydration
-    // A simple check on mount is usually sufficient if we assume rehydration is fast
-    const unsubscribe = useResumeStore.persist.onRehydrateStorage(() => {
-      if (useResumeStore.getState().history.length === 0) {
-        startConversation();
-      }
-    });
+    if (!isInitialized && history.length === 0) {
+      startConversation();
+      setIsInitialized(true);
+    } else if (!isInitialized) {
+      setIsInitialized(true);
+    }
+  }, [isInitialized, history.length]);
 
-    // Handle case where rehydration already happened
-    if (useResumeStore.getState().history.length === 0) {
-        startConversation();
-    }
-    
-    return () => {
-        unsubscribe();
-    }
-  }, []);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollTo({
-        top: scrollAreaRef.current.scrollHeight,
-        behavior: 'smooth',
-      });
+      const scrollElement = scrollAreaRef.current.querySelector('div');
+      if (scrollElement) {
+        scrollElement.scrollTop = scrollElement.scrollHeight;
+      }
     }
   }, [history]);
 
@@ -158,7 +150,7 @@ function BuildPageContent() {
       <div className="h-full flex flex-col overflow-hidden">
         <ScrollArea className="flex-1">
           <Card>
-            <CardHeader>
+            <CardHeader className='flex-row justify-between items-center'>
                  <h2 className="text-2xl font-bold">Live Preview</h2>
                 <ExportControls previewRef={previewRef} />
             </CardHeader>
