@@ -51,11 +51,9 @@ function BuildPageContent() {
   useEffect(() => {
     if (!isInitialized && history.length === 0) {
       startConversation();
-      setIsInitialized(true);
-    } else if (!isInitialized) {
-      setIsInitialized(true);
     }
-  }, [isInitialized, history.length]);
+    setIsInitialized(true);
+  }, [isInitialized]);
 
 
   useEffect(() => {
