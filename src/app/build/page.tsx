@@ -59,8 +59,15 @@ function BuildPageContent() {
         // We need to make sure Zustand has rehydrated the state from localStorage
         // before we decide to start a new conversation.
         setTimeout(() => {
-            if (useResumeStore.getState().history.length === 0) {
+            const currentHistory = useResumeStore.getState().history;
+            if (currentHistory.length === 0) {
                 startConversation();
+            } else {
+                // If there's history, check if the last message was the completion message
+                const lastMessage = currentHistory[currentHistory.length - 1];
+                if(lastMessage?.text.includes("I've drafted your resume")) {
+                    setIsComplete(true);
+                }
             }
         }, 100);
     }
