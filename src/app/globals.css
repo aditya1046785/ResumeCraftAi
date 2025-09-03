@@ -88,26 +88,15 @@ body {
 }
 
 @media print {
-  body {
-    background-color: #fff !important;
-    -webkit-print-color-adjust: exact;
+  body.printing * {
+    visibility: hidden;
   }
-  .no-print, .no-print * {
-    display: none !important;
+
+  body.printing #resume-preview, body.printing #resume-preview * {
+    visibility: visible;
   }
-  main, main > div, #resume-container, #resume-container > .flex {
-    display: block !important;
-    height: auto !important;
-    overflow: visible !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-  #resume-container .bg-gray-100 {
-     background-color: transparent !important;
-     padding: 0 !important;
-  }
-  #resume-preview {
-    display: block !important;
+
+  body.printing #resume-preview {
     position: absolute;
     left: 0;
     top: 0;
@@ -117,5 +106,10 @@ body {
     margin: 0;
     padding: 0;
     border: none;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .no-print {
+    display: none !important;
   }
 }

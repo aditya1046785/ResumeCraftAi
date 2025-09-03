@@ -13,7 +13,9 @@ export function ExportControls({ previewRef }: ExportControlsProps) {
     const { toast } = useToast();
 
     const handlePrint = () => {
+        document.body.classList.add('printing');
         window.print();
+        document.body.classList.remove('printing');
     };
     
     const handleDocxExport = () => {
