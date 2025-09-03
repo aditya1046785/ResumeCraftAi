@@ -1,0 +1,492 @@
+diff --git a/node_modules/react-to-print/lib/index.js b/node_modules/react-to-print/lib/index.js
+index 47a3a61..c8f42d2 100644
+--- a/node_modules/react-to-print/lib/index.js
++++ b/node_modules/react-to-print/lib/index.js
+@@ -37,7 +37,7 @@ class Print extends React.Component {
+         this.triggerRef = React.createRef();
+         this.contentRef = React.createRef();
+         this.state = {
+-            isLoading: false,
++            isLoading: false
+         };
+     }
+     componentDidMount() {
+@@ -103,12 +103,7 @@ class Print extends React.Component {
+         }
+         const contentEl = this.getContent();
+-        if (contentEl) {
+-            const ElemToPrint = this.handlePrint(contentEl);
+-            if (this.props.print) {
+-                this.props.print(ElemToPrint);
+-            }
+-        }
++        this.handlePrint(contentEl);
+         this.setState({ isLoading: false });
+         if (this.props.onAfterPrint) {
+             this.props.onAfterPrint();
+@@ -155,7 +150,7 @@ class Print extends React.Component {
+             // https://github.com/gregnb/react-to-print/issues/342
+             printWindow.addEventListener("beforeunload", (event) => {
+                 event.preventDefault(); // Not sure if this is needed
+-                printWindow.close(); // Close the window on reload
++                // printWindow.close(); // Close the window on reload
+             });
+         }
+         document.body.appendChild(printWindow.document.body);
+@@ -201,15 +196,16 @@ class Print extends React.Component {
+                 }
+             });
+         };
+-        printWindow.focus(); // Required for IE
+-        // Some browsers such as Safari don't print unless window.print() is called inside a setTimeout
+-        setTimeout(() => {
+-            try {
+-                if (!printWindow.document.execCommand("print", false, null)) {
+-                    printWindow.print();
++        if (this.props.print) {
++            this.props.print(printWindow.document.body);
++        }
++        else {
++            printWindow.focus(); // Required for IE
++            // Some browsers such as Safari don't print unless window.print() is called inside a setTimeout
++            setTimeout(() => {
++                try {
++                    if (!printWindow.document.execCommand("print", false, null)) {
++                        printWindow.print();
++                    }
+                 }
+-            }
+-            catch (_a) {
+-                printWindow.print();
+-            }
+-        }, 500);
+-        return printWindow.document.body;
++                catch (_a) {
++                    printWindow.print();
++                }
++            }, 500);
++        }
+     }
+ }
+ Print.defaultProps = {
+@@ -218,8 +214,8 @@ class Print extends React.Component {
+ };
+ export const useReactToPrint = (props) => {
+     const [isLoading, setIsLoading] = React.useState(false);
+-    const linkTotal = React.useRef(0);
+-    const linksLoaded = React.useRef([]);
++    const linkTotal = React.useRef(0); // TODO: for some reason this is not persisting, instead just set to 1
++    const linksLoaded = React.useRef([]); // TODO: for some reason this is not persisting, instead just set to 1
+     const triggerRef = React.useRef(null);
+     const contentRef = React.useRef(null);
+     const onBeforeGetContentResolve = React.useRef(null);
+@@ -242,9 +238,9 @@ export const useReactToPrint = (props) => {
+             const { onAfterPrint } = props;
+             if (onAfterPrint) {
+                 onAfterPrint();
+-            }
+-            linksLoaded.current = []; // TODO: for some reason this is not persisting, so does not matter
++            }            
+             setIsLoading(false);
++            linksLoaded.current = [];
+         }, 500);
+     }, [props.onAfterPrint, props.removeAfterPrint]);
+     const handlePrint = React.useCallback((content) => {
+@@ -263,7 +259,7 @@ export const useReactToPrint = (props) => {
+         const { copyStyles = true } = props;
+         const printWindow = document.createElement("iframe");
+         printWindow.style.position = "absolute";
+-        printWindow.style.top = "-1000px";
++        printWindow.style.top = "-10000px";
+         printWindow.style.left = "-1000px";
+         const contentNodes = findDOMNode(content);
+         if (!contentNodes) {
+@@ -348,15 +344,17 @@ export const useReactToPrint = (props) => {
+                 }
+             });
+         };
+-        printWindow.focus(); // Required for IE
+-        // Some browsers such as Safari don't print unless window.print() is called inside a setTimeout
+-        setTimeout(() => {
+-            try {
+-                if (!printWindow.document.execCommand("print", false, null)) {
+-                    printWindow.print();
++        if (props.print) {
++            props.print(printWindow.document.body);
++        }
++        else {
++            printWindow.focus(); // Required for IE
++            // Some browsers such as Safari don't print unless window.print() is called inside a setTimeout
++            setTimeout(() => {
++                try {
++                    if (!printWindow.document.execCommand("print", false, null)) {
++                        printWindow.print();
++                    }
+                 }
+-            }
+-            catch (_a) {
+-                printWindow.print();
+-            }
+-        }, 500);
++                catch (_a) {
++                    printWindow.print();
++                }
++            }, 500);
++        }
+     }, [handleAfterPrint, props]);
+     const handleBeforeGetContent = React.useCallback(() => __awaiter(void 0, void 0, void 0, function* () {
+         const { onBeforeGetContent } = props;
+@@ -406,6 +404,11 @@ export const useReactToPrint = (props) => {
+     };
+ });
+ /**
++ * A default no-op function.
++ */
++function noop() { }
++;
++/**
+  * Find the node that is being targeted.
+  *
+  * @param {HTMLElement} content The node to find.
+diff --git a/node_modules/react-to-print/lib/index.d.ts b/node_modules/react-to-print/lib/index.d.ts
+index 72ecb40..f0b4d45 100644
+--- a/node_modules/react-to-print/lib/index.d.ts
++++ b/node_modules/react-to-print/lib/index.d.ts
+@@ -1,6 +1,6 @@
+ import * as React from "react";
+ export interface ReactToPrintProps {
+-    bodyClass?: string;
++    bodyClass?: string; 
+     content: () => React.ReactInstance | null;
+     copyStyles?: boolean;
+     documentTitle?: string;
+@@ -8,7 +8,7 @@ export interface ReactToPrintProps {
+     onBeforeGetContent?: () => void | Promise<any>;
+     onBeforePrint?: () => void | Promise<any>;
+     onAfterPrint?: () => void;
+-    print?: (iframe: HTMLIFrameElement) => Promise<any>;
++    print?: (target: HTMLIFrameElement) => Promise<any>;
+     removeAfterPrint?: boolean;
+     suppressErrors?: boolean;
+     trigger?: () => React.ReactNode;
+@@ -29,10 +29,9 @@ export default class Print extends React.Component<ReactToPrintProps, PrintState
+     private linkTotal;
+     private linksLoaded;
+     private triggerRef;
+-    private contentRef;
+     private onBeforeGetContentResolve;
+-    constructor(props: ReactToPrintProps);
++    constructor(props: any);
+     componentDidMount(): void;
+     componentDidUpdate(prevProps: ReactToPrintProps, _prevState: PrintState): void;
+-    private handlePrint;
+     private startPrint;
+     private getContent;
+     private triggerPrint;
+@@ -42,6 +41,7 @@ export default class Print extends React.Component<ReactToPrintProps, PrintState
+     setRef: (ref: React.ReactInstance | null, type: "trigger" | "content") => void;
+     render(): React.ReactElement<any>;
+ }
++declare function findDOMNode(content: React.ReactInstance | null): Element | Text | null;
+ export declare const useReactToPrint: (props: ReactToPrintProps) => () => void;
+ export {};
+ //# sourceMappingURL=index.d.ts.map
+diff --git a/node_modules/react-to-print/lib/utils.js b/node_modules/react-to-print/lib/utils.js
+new file mode 100644
+index 0000000..8ca1306
+--- /dev/null
++++ b/node_modules/react-to-print/lib/utils.js
+@@ -0,0 +1,18 @@
++"use strict";
++Object.defineProperty(exports, "__esModule", { value: true });
++exports.findDOMNode = void 0;
++const react_dom_1 = require("react-dom");
++/**
++ * A default no-op function.
++ */
++function noop() { }
++;
++/**
++ * Find the node that is being targeted.
++ *
++ * @param {HTMLElement} content The node to find.
++ */
++function findDOMNode(content) {
++    return react_dom_1.findDOMNode(content);
++}
++exports.findDOMNode = findDOMNode;
+diff --git a/node_modules/react-to-print/lib/utils.d.ts b/node_modules/react-to-print/lib/utils.d.ts
+new file mode 100644
+index 0000000..ec2a98f
+--- /dev/null
++++ b/node_modules/react-to-print/lib/utils.d.ts
+@@ -0,0 +1,2 @@
++import * as React from "react";
++export declare function findDOMNode(content: React.ReactInstance | null): Element | Text | null;
+diff --git a/node_modules/react-to-print/package.json b/node_modules/react-to-print/package.json
+index 32c1c6e..f8e815e 100644
+--- a/node_modules/react-to-print/package.json
++++ b/node_modules/react-to-print/package.json
+@@ -23,12 +23,12 @@
+     "react": "^16.8.0 || ^17.0.0 || ^18.0.0"
+   },
+   "dependencies": {
+-    "react-dom": "^16.8.0 || ^17.0.0 || ^18.0.0"
++    "react-dom": "^16.8.0 || ^17.0.0 || ^18.0.0",
++    "tslib": "^2.3.1"
+   },
+   "devDependencies": {
+     "@testing-library/jest-dom": "5.16.2",
+     "@testing-library/react": "12.1.2",
+-    "@testing-library/react-hooks": "7.0.2",
+     "@types/jest": "27.4.0",
+     "@types/react": "17.0.39",
+     "cross-env": "7.0.3",
+@@ -36,8 +36,8 @@
+     "jest-environment-jsdom": "27.5.1",
+     "prettier": "2.5.1",
+     "react": "17.0.2",
+-    "react-dom": "17.0.2",
+     "rimraf": "3.0.2",
+-    "ts-jest": "27.1.3",
++    "ts-jest": "27.1.4",
+     "typescript": "4.5.5"
+   }
+ }
+diff --git a/node_modules/react-to-print/src/index.tsx b/node_modules/react-to-print/src/index.tsx
+index 4554865..48ab095 100644
+--- a/node_modules/react-to-print/src/index.tsx
++++ b/node_modules/react-to-print/src/index.tsx
+@@ -1,7 +1,7 @@
+ import * as React from "react";
+-import { findDOMNode } from "react-dom";
++import { findDOMNode, render, unmountComponentAtNode } from "react-dom";
+ 
+ export interface ReactToPrintProps {
+   /** Class to pass to the print window body */
+   bodyClass?: string;
+@@ -26,7 +26,7 @@ export interface ReactToPrintProps {
+    * @param {HTMLIFrameElement} iframe The iframe that is being printed
+    * @returns {Promise<any> | void}
+    */
+-  print?: (iframe: HTMLIFrameElement) => Promise<any>;
++  print?: (target: HTMLIFrameElement) => Promise<any>;
+ 
+   /** If true, remove the iframe that was created after printing. Defaults to `false` */
+   removeAfterPrint?: boolean;
+@@ -58,9 +58,7 @@ export default class Print extends React.Component<ReactToPrintProps, PrintState
+ 
+   private onBeforeGetContentResolve = React.useRef<(() => void) | null>(null);
+ 
+-  constructor(props: ReactToPrintProps) {
++  constructor(props: any) {
+     super(props);
+ 
+     this.state = {
+@@ -107,24 +105,17 @@ export default class Print extends React.Component<ReactToPrintProps, PrintState
+ 
+     this.setState({ isLoading: true });
+ 
+     if (this.props.onBeforeGetContent) {
+       const onBeforeGetContentReturned = this.props.onBeforeGetContent();
+       if (onBeforeGetContentReturned && typeof onBeforeGetContentReturned.then === "function") {
+         onBeforeGetContentReturned.then(() => {
+-          this.handlePrint();
++          // TODO: this is wrong, should be awaiting this, but that would require a method extracted from this
++          this.handlePrint(); 
+         });
+       } else {
+-        this.handlePrint();
++        this.handlePrint();
+       }
+     } else {
+-      this.handlePrint();
+-    }
+-  }
+-
+-  private handlePrint = () => {
+-    const {
+-      onAfterPrint
+-    } = this.props;
+-
+-    if (onAfterPrint) {
+-      setTimeout(() => {
+-        onAfterPrint();
+-        this.setState({ isLoading: false });
+-      }, 500);
++      this.handlePrint();
+     }
+   }
+ 
+@@ -163,16 +154,7 @@ export default class Print extends React.Component<ReactToPrintProps, PrintState
+ 
+     const contentEl = this.getContent();
+ 
+-    if (contentEl) {
+-      const ElemToPrint = this.handlePrint(contentEl);
+-
+-      if (this.props.print) {
+-        this.props.print(ElemToPrint);
+-      }
+-    }
++    this.handlePrint(contentEl);
+ 
+     this.setState({ isLoading: false });
+ 
+@@ -226,13 +208,13 @@ export default class Print extends React.Component<ReactToPrintProps, PrintState
+ 
+     // https://github.com/gregnb/react-to-print/issues/342
+     printWindow.addEventListener("beforeunload", (event) => {
+       event.preventDefault(); // Not sure if this is needed
+-      printWindow.close(); // Close the window on reload
++      // printWindow.close(); // Close the window on reload
+     });
+   }
+ 
+   document.body.appendChild(printWindow.document.body);
+ 
+   if (copyStyles) {
+     const styleEls = this.getCopyStyles();
+     for (let i = 0, styleElsLen = styleEls.length; i < styleElsLen; i++) {
+@@ -282,23 +264,26 @@ export default class Print extends React.Component<ReactToPrintProps, PrintState
+         }
+       });
+     }
+ 
+     if (this.props.print) {
+-      this.props.print(printWindow.document.body as unknown as HTMLIFrameElement)
++      this.props.print(printWindow.document.body);
+     } else {
+-      printWindow.focus(); // Required for IE
++        printWindow.focus(); // Required for IE
+ 
+-      // Some browsers such as Safari don't print unless window.print() is called inside a setTimeout
+-      setTimeout(() => {
+-        try {
+-          if (!printWindow.document.execCommand("print", false, null)) {
+-            printWindow.print();
++        // Some browsers such as Safari don't print unless window.print() is called inside a setTimeout
++        setTimeout(() => {
++          try {
++            if (!printWindow.document.execCommand("print", false, null)) {
++              printWindow.print();
++            }
++          } catch {
++            printWindow.print();
+           }
+-        } catch {
+-          printWindow.print();
+-        }
+-      }, 500);
++        }, 500);
+     }
+-    return printWindow.document.body;
+   }
+ 
+   public setRef = (ref: React.ReactInstance | null, type: "trigger" | "content"): void => {
+     if (type === "trigger") {
+@@ -324,8 +309,8 @@ export const useReactToPrint = (props: ReactToPrintProps) => {
+   const {
+     onAfterPrint
+   } = props;
+ 
+-  const [isLoading, setIsLoading] = React.useState(false);
+-  const linkTotal = React.useRef(0);
+-  const linksLoaded = React.useRef([]);
++  const [isLoading, setIsLoading] = React.useState<boolean>(false);
++  const linkTotal = React.useRef(0); // TODO: for some reason this is not persisting, instead just set to 1
++  const linksLoaded = React.useRef([]); // TODO: for some reason this is not persisting, instead just set to 1
+   const triggerRef = React.useRef<HTMLButtonElement | null>(null);
+   const contentRef = React.useRef<React.ReactInstance | null>(null);
+   const onBeforeGetContentResolve = React.useRef<(() => void) | null>(null);
+ 
+   const handleAfterPrint = React.useCallback(() => {
+     // Check if we still have a print ongoing
+     if (isPrinting.current) {
+@@ -334,10 +319,9 @@ export const useReactToPrint = (props: ReactToPrintProps) => {
+         const { onAfterPrint } = props;
+ 
+         if (onAfterPrint) {
+           onAfterPrint();
+-        }
+-
+-        linksLoaded.current = []; // TODO: for some reason this is not persisting, so does not matter
++        }            
+ 
+         setIsLoading(false);
++        linksLoaded.current = [];
+       }, 500);
+     }
+   }, [props.onAfterPrint, props.removeAfterPrint]);
+ 
+   const handlePrint = React.useCallback((content: React.ReactInstance) => {
+     const {
+@@ -355,7 +339,7 @@ export const useReactToPrint = (props: ReactToPrintProps) => {
+     const printWindow = document.createElement("iframe");
+     printWindow.style.position = "absolute";
+-    printWindow.style.top = "-1000px";
++    printWindow.style.top = "-10000px";
+     printWindow.style.left = "-1000px";
+ 
+     const contentNodes = findDOMNode(content)
+ 
+     if (!contentNodes) {
+       if (suppressErrors) {
+@@ -438,25 +422,28 @@ export const useReactToPrint = (props: ReactToPrintProps) => {
+           }
+         });
+       }
+     }
+ 
+     if (props.print) {
+-      props.print(printWindow.document.body as unknown as HTMLIFrameElement)
++      props.print(printWindow.document.body);
+     } else {
+       printWindow.focus(); // Required for IE
+ 
+       // Some browsers such as Safari don't print unless window.print() is called inside a setTimeout
+       setTimeout(() => {
+         try {
+           if (!printWindow.document.execCommand("print", false, null)) {
+             printWindow.print();
+           }
+         } catch {
+           printWindow.print();
+         }
+       }, 500);
+     }
+ 
+   }, [handleAfterPrint, props]);
+ 
+   const handleBeforeGetContent = React.useCallback(async () => {
+     const { onBeforeGetContent } = props;
+ 
+     if (onBeforeGetContent) {
+@@ -512,12 +499,19 @@ export const useReactToPrint = (props: ReactToPrintProps) => {
+       isPrinting.current = true;
+       setIsLoading(true);
+       handleBeforeGetContent();
+     }
+   };
+-
+-  return handlePrintRequest;
+ });
+ 
++/**
++ * A default no-op function.
++ */
++function noop() {};
++
+ /**
+  * Find the node that is being targeted.
+  * 
+  * @param {HTMLElement} content The node to find.
+  */
+-function findDOMNode(content: React.ReactInstance | null): Element | Text | null {
+-  return findDOMNode(content);
+-}
++function findDOMNode(content: React.ReactInstance | null): Element | Text | null {  
++    return findDOMNode(content);
++  }
++
++export { useReactToPrint };
