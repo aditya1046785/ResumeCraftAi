@@ -14,7 +14,7 @@ export default function Home() {
           No more guessing what to write. Our AI will ask you simple questions, and piece by piece, we'll build a professional resume that highlights your strengths and gets you noticed.
         </p>
         <div className="mt-10 flex items-center justify-center gap-4">
-          <Link href="/build" legacyBehavior>
+          <Link href="/build">
             <Button size="lg" className="w-full sm:w-auto">
               <Bot className="mr-2 h-5 w-5" />
               Start Conversation
