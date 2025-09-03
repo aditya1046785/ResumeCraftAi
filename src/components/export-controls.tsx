@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -13,12 +14,21 @@ export function ExportControls({ previewRef }: ExportControlsProps) {
     const { toast } = useToast();
 
     const handlePrint = () => {
-        if (!previewRef.current) return;
+        if (!previewRef.current) {
+            toast({
+                title: "Error",
+                description: "Could not find the resume preview to print.",
+                variant: "destructive"
+            });
+            return;
+        }
 
         const printWindow = window.open('', '', 'height=800,width=800');
 
         if (printWindow) {
             const resumeHTML = previewRef.current.innerHTML;
+            
+            // Gather all styles from the current document
             const styles = Array.from(document.styleSheets)
                 .map((styleSheet) => {
                     try {
@@ -31,7 +41,7 @@ export function ExportControls({ previewRef }: ExportControlsProps) {
                     }
                 })
                 .join('');
-            
+
             printWindow.document.write(`
                 <html>
                     <head>
@@ -54,9 +64,8 @@ export function ExportControls({ previewRef }: ExportControlsProps) {
                   printWindow.focus();
                   printWindow.print();
                   printWindow.close();
-              }, 250);
+              }, 250); // A small delay to ensure styles are applied
             };
-
         } else {
             toast({
                 title: "Print Failed",
