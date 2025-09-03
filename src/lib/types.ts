@@ -9,3 +9,8 @@ export interface ResumeData {
 }
 
 export type ResumeSection = keyof ResumeData;
+
+export interface Message {
+  role: 'user' | 'model';
+  text: string;
+}
