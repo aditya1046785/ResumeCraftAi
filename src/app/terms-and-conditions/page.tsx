@@ -39,7 +39,7 @@ export default function TermsAndConditionsPage() {
   
           <h2 className="text-2xl font-semibold text-foreground pt-4">5. Governing Law</h2>
           <p>
-            This Agreement is governed by the laws of the United States.
+            This Agreement is governed by the laws of India.
           </p>
         </div>
       </div>
