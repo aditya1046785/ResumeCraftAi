@@ -38,27 +38,38 @@ function BuildPageContent() {
     setError(null);
     try {
       const result = await askResumeQuestion({ resumeData, history: [] });
-      setHistory([{ role: 'model', text: result.question }]);
-    } catch (e) {
-      setError('Failed to start the conversation. Please try again.');
-      console.error(e);
+      addMessage({ role: 'model', text: result.question });
+    } catch (e: any) {
+        if (e.message && e.message.includes('503')) {
+            setError('The AI model is currently overloaded. Please wait a moment and try again.');
+        } else {
+            setError('Failed to start the conversation. Please try refreshing the page.');
+        }
+        console.error(e);
     } finally {
-      setIsLoading(false);
+        setIsLoading(false);
     }
   };
   
   // Start conversation on component mount only if history is empty
   useEffect(() => {
-    if (!isInitialized && history.length === 0) {
-      startConversation();
+    if (!isInitialized) {
+        setIsInitialized(true);
+        // We need to make sure Zustand has rehydrated the state from localStorage
+        // before we decide to start a new conversation.
+        setTimeout(() => {
+            if (useResumeStore.getState().history.length === 0) {
+                startConversation();
+            }
+        }, 100);
     }
-    setIsInitialized(true);
   }, [isInitialized]);
 
 
   useEffect(() => {
     if (scrollAreaRef.current) {
-      const scrollElement = scrollAreaRef.current.querySelector('div');
+      // A bit of a hack to get the underlying div from ScrollArea
+      const scrollElement = scrollAreaRef.current.querySelector('div[style*="overflow: scroll"]');
       if (scrollElement) {
         scrollElement.scrollTop = scrollElement.scrollHeight;
       }
@@ -84,11 +95,15 @@ function BuildPageContent() {
       if (result.isComplete) {
         setIsComplete(true);
       }
-    } catch (e) {
-      setError('Sorry, something went wrong. Please try sending your message again.');
-      console.error(e);
+    } catch (e: any) {
       // Revert optimistic update on error
       setHistory(history);
+      if (e.message && (e.message.includes('503') || e.message.includes('overloaded'))) {
+        setError('The AI model is currently overloaded. Please wait a moment and send your message again.');
+      } else {
+        setError('Sorry, something went wrong. Please try sending your message again.');
+      }
+      console.error(e);
     } finally {
       setIsLoading(false);
     }
@@ -128,7 +143,7 @@ function BuildPageContent() {
                     </div>
                 </div>
             )}
-            {error && <p className="text-destructive text-sm text-center">{error}</p>}
+            {error && <p className="text-destructive text-sm text-center py-2">{error}</p>}
           </ScrollArea>
            <form onSubmit={handleSendMessage} className="flex items-center gap-2 pt-4 border-t">
               <Input
@@ -146,19 +161,21 @@ function BuildPageContent() {
 
       {/* Preview Panel */}
       <div className="h-full flex flex-col overflow-hidden">
-        <ScrollArea className="flex-1">
-          <Card>
+        <Card className="flex flex-col h-full">
             <CardHeader className='flex-row justify-between items-center'>
-                 <h2 className="text-2xl font-bold">Live Preview</h2>
+                 <div>
+                    <h2 className="text-2xl font-bold">Live Preview</h2>
+                 </div>
                 <ExportControls previewRef={previewRef} />
             </CardHeader>
-            <CardContent className="p-0">
-              <div className="bg-gray-100 p-8">
-                <ResumePreview ref={previewRef} />
-              </div>
+            <CardContent className="p-0 flex-1 overflow-hidden">
+              <ScrollArea className="h-full">
+                <div className="bg-gray-100 p-8">
+                    <ResumePreview ref={previewRef} />
+                </div>
+              </ScrollArea>
             </CardContent>
           </Card>
-        </ScrollArea>
       </div>
     </div>
   );
