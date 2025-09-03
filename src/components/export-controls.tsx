@@ -19,31 +19,12 @@ export function ExportControls({ previewRef }: ExportControlsProps) {
 
         if (printWindow) {
             const resumeHTML = previewRef.current.outerHTML;
+            const originalDocument = document;
 
-            // Find the main stylesheet URL
-            const styleSheet = Array.from(document.styleSheets).find(ss => ss.href && ss.href.includes('app/globals.css'));
-            const cssLink = styleSheet ? `<link rel="stylesheet" href="${styleSheet.href}">` : '';
-            
             printWindow.document.write(`
                 <html>
                     <head>
                         <title>Print Resume</title>
-                        ${cssLink}
-                        <style>
-                            @media print {
-                                body { 
-                                    margin: 0; 
-                                    padding: 0;
-                                    -webkit-print-color-adjust: exact !important;
-                                    print-color-adjust: exact !important;
-                                }
-                                #resume-preview { 
-                                    box-shadow: none !important; 
-                                    margin: 0 !important;
-                                    border: none !important;
-                                }
-                            }
-                        </style>
                     </head>
                     <body>
                         ${resumeHTML}
@@ -51,14 +32,37 @@ export function ExportControls({ previewRef }: ExportControlsProps) {
                 </html>
             `);
 
+            // Copy all stylesheets from the original document to the print window
+            Array.from(originalDocument.styleSheets).forEach(styleSheet => {
+                if (styleSheet.href) {
+                    const link = printWindow.document.createElement('link');
+                    link.rel = 'stylesheet';
+                    link.href = styleSheet.href;
+                    printWindow.document.head.appendChild(link);
+                } else if (styleSheet.cssRules) {
+                    const style = printWindow.document.createElement('style');
+                    style.textContent = Array.from(styleSheet.cssRules)
+                        .map(rule => rule.cssText)
+                        .join('');
+                    printWindow.document.head.appendChild(style);
+                }
+            });
+
+            // Ensure fonts are loaded (important for custom fonts)
+            const fontLink = originalDocument.querySelector('link[href*="fonts.googleapis.com"]');
+            if (fontLink) {
+                printWindow.document.head.appendChild(fontLink.cloneNode());
+            }
+
             printWindow.document.close();
             
             printWindow.onload = () => {
+              // A small delay ensures all styles and fonts are applied before printing
               setTimeout(() => {
                   printWindow.focus();
                   printWindow.print();
                   printWindow.close();
-              }, 250); // A small delay to ensure styles are applied
+              }, 500);
             };
 
         } else {
