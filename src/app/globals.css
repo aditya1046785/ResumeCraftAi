@@ -104,10 +104,11 @@ body {
   
   #resume-preview {
     box-shadow: none !important;
-    border: none !important;
     padding: 0 !important;
     margin: 0 !important;
     width: 100% !important;
     height: 100% !important;
+    border: 1px solid #aaa;
+    padding: 0.5in !important;
   }
 }
