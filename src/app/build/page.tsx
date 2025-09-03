@@ -41,7 +41,7 @@ function BuildPageContent() {
       const result = await askResumeQuestion({ resumeData: useResumeStore.getState().resumeData, history: [] });
       addMessage({ role: 'model', text: result.question });
     } catch (e: any) {
-        if (e.message && e.message.includes('503')) {
+        if (e.message && (e.message.includes('503') || e.message.includes('overloaded'))) {
             setError('The AI model is currently overloaded. Please wait a moment and try again.');
         } else {
             setError('Failed to start the conversation. Please try refreshing the page.');
@@ -113,7 +113,7 @@ function BuildPageContent() {
   const handleStartOver = () => {
     clearChat();
     setIsComplete(false);
-    // The useEffect that checks history length will trigger startConversation
+    startConversation();
   };
 
   const renderMessage = (message: Message, index: number) => (
