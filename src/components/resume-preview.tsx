@@ -10,7 +10,7 @@ const ResumePreview = forwardRef<HTMLDivElement>((props, ref) => {
     const renderSection = (title: string, content: string) => {
         if (!content.trim()) return null;
         return (
-            <div className="mb-4">
+            <div className="mb-6">
                 <h2 style={{ textTransform: 'uppercase' }} className="text-sm font-bold border-b border-gray-400 pb-1 mb-2 text-gray-700">{title}</h2>
                 <div className="text-xs text-gray-800 whitespace-pre-wrap">{content}</div>
             </div>
@@ -18,17 +18,19 @@ const ResumePreview = forwardRef<HTMLDivElement>((props, ref) => {
     }
 
     return (
-        <div ref={ref} className="bg-white p-6 shadow-lg text-black font-sans print:shadow-none" id="resume-preview">
-            <div style={{ textAlign: 'center' }} className="mb-4">
-                <h1 className="text-2xl font-bold text-gray-800">{name}</h1>
-                <p className="text-xs text-gray-600">{contact}</p>
-            </div>
+        <div ref={ref} id="resume-preview">
+            <div style={{ padding: '0.5in', border: '1px solid #ccc' }} className="bg-white shadow-lg text-black font-sans print:shadow-none">
+                <div style={{ textAlign: 'center' }} className="mb-4">
+                    <h1 className="text-2xl font-bold text-gray-800">{name}</h1>
+                    <p className="text-xs text-gray-600">{contact}</p>
+                </div>
 
-            {renderSection('Summary', summary)}
-            {renderSection('Experience', experience)}
-            {renderSection('Projects', projects)}
-            {renderSection('Education', education)}
-            {renderSection('Skills', skills)}
+                {renderSection('Summary', summary)}
+                {renderSection('Experience', experience)}
+                {renderSection('Projects', projects)}
+                {renderSection('Education', education)}
+                {renderSection('Skills', skills)}
+            </div>
         </div>
     );
 });
