@@ -10,8 +10,18 @@ const ResumePreview = forwardRef<HTMLDivElement>((props, ref) => {
     const renderSection = (title: string, content: string) => {
         if (!content.trim()) return null;
         return (
-            <div className="mb-6">
-                <h2 style={{ textTransform: 'uppercase' }} className="text-sm font-bold border-b border-gray-400 pb-1 mb-2 text-gray-700">{title}</h2>
+            <div className="mb-8">
+                <h2 
+                    style={{ 
+                        textTransform: 'uppercase', 
+                        borderBottom: '1px solid #9ca3af', 
+                        paddingBottom: '0.25rem', 
+                        marginBottom: '0.5rem' 
+                    }} 
+                    className="text-sm font-bold text-gray-700"
+                >
+                    {title}
+                </h2>
                 <div className="text-xs text-gray-800 whitespace-pre-wrap">{content}</div>
             </div>
         );
