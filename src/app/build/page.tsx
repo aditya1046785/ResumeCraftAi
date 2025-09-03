@@ -21,12 +21,11 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 function BuildPageContent() {
   const searchParams = useSearchParams();
-  const { resumeData, setResumeData } = useResumeStore();
+  const { resumeData, setResumeData, history, setHistory, addMessage } = useResumeStore();
 
   const [isLoading, setIsLoading] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [history, setHistory] = useState<Message[]>([]);
   const [userInput, setUserInput] = useState('');
   
   const previewRef = useRef<HTMLDivElement>(null);
@@ -47,9 +46,24 @@ function BuildPageContent() {
     }
   };
   
-  // Start conversation on component mount
+  // Start conversation on component mount only if history is empty
   useEffect(() => {
-    startConversation();
+    // Zustand's persistence is asynchronous, so we need to wait for rehydration
+    // A simple check on mount is usually sufficient if we assume rehydration is fast
+    const unsubscribe = useResumeStore.persist.onRehydrateStorage(() => {
+      if (useResumeStore.getState().history.length === 0) {
+        startConversation();
+      }
+    });
+
+    // Handle case where rehydration already happened
+    if (useResumeStore.getState().history.length === 0) {
+        startConversation();
+    }
+    
+    return () => {
+        unsubscribe();
+    }
   }, []);
 
   useEffect(() => {
@@ -66,23 +80,25 @@ function BuildPageContent() {
     if (!userInput.trim() || isLoading) return;
 
     const newUserMessage: Message = { role: 'user', text: userInput };
-    const newHistory = [...history, newUserMessage];
-    setHistory(newHistory);
+    addMessage(newUserMessage);
+    const currentHistory = [...history, newUserMessage];
+
     setUserInput('');
     setIsLoading(true);
     setError(null);
 
     try {
-      const result = await askResumeQuestion({ resumeData, history: newHistory });
+      const result = await askResumeQuestion({ resumeData, history: currentHistory });
       setResumeData(result.updatedResumeData);
-      setHistory([...newHistory, { role: 'model', text: result.question }]);
+      addMessage({ role: 'model', text: result.question });
       if (result.isComplete) {
         setIsComplete(true);
       }
     } catch (e) {
       setError('Sorry, something went wrong. Please try sending your message again.');
       console.error(e);
-      setHistory(history); // revert history
+      // Revert optimistic update on error
+      setHistory(history);
     } finally {
       setIsLoading(false);
     }
@@ -104,13 +120,13 @@ function BuildPageContent() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
       {/* Chat Panel */}
-      <Card className="flex flex-col h-full overflow-hidden">
+      <Card className="flex flex-col h-full max-h-full overflow-hidden">
         <CardHeader>
           <CardTitle>Resume Conversation</CardTitle>
           <CardDescription>Let&apos;s build your resume together. Answer the questions below.</CardDescription>
         </CardHeader>
         <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
-          <ScrollArea className="flex-1 pr-4" ref={scrollAreaRef}>
+          <ScrollArea className="flex-1 pr-4 -mr-4" ref={scrollAreaRef}>
             {history.map(renderMessage)}
              {isLoading && history.length > 0 && (
                 <div className="flex items-start gap-3 my-4">
