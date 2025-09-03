@@ -14,14 +14,14 @@ import { ExportControls } from '@/components/export-controls';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Loader2Icon } from '@/components/icons';
-import { Send } from 'lucide-react';
+import { Send, RotateCcw } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 
 function BuildPageContent() {
   const searchParams = useSearchParams();
-  const { resumeData, setResumeData, history, setHistory, addMessage } = useResumeStore();
+  const { resumeData, setResumeData, history, setHistory, addMessage, clearChat } = useResumeStore();
 
   const [isLoading, setIsLoading] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
@@ -37,7 +37,8 @@ function BuildPageContent() {
     setIsLoading(true);
     setError(null);
     try {
-      const result = await askResumeQuestion({ resumeData, history: [] });
+      // Use a fresh, empty history for the initial call
+      const result = await askResumeQuestion({ resumeData: useResumeStore.getState().resumeData, history: [] });
       addMessage({ role: 'model', text: result.question });
     } catch (e: any) {
         if (e.message && e.message.includes('503')) {
@@ -109,6 +110,12 @@ function BuildPageContent() {
     }
   };
 
+  const handleStartOver = () => {
+    clearChat();
+    setIsComplete(false);
+    // The useEffect that checks history length will trigger startConversation
+  };
+
   const renderMessage = (message: Message, index: number) => (
     <div key={index} className={`flex items-start gap-3 my-4 ${message.role === 'user' ? 'justify-end' : ''}`}>
       {message.role === 'model' && (
@@ -126,9 +133,15 @@ function BuildPageContent() {
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
       {/* Chat Panel */}
       <Card className="flex flex-col h-full max-h-full overflow-hidden no-print">
-        <CardHeader>
-          <CardTitle>Resume Conversation</CardTitle>
-          <CardDescription>Let&apos;s build your resume together. Answer the questions below.</CardDescription>
+        <CardHeader className="flex-row items-center justify-between">
+            <div>
+              <CardTitle>Resume Conversation</CardTitle>
+              <CardDescription>Let&apos;s build your resume together. Answer the questions below.</CardDescription>
+            </div>
+            <Button variant="outline" size="sm" onClick={handleStartOver}>
+              <RotateCcw className="mr-2 h-4 w-4" />
+              Start Over
+            </Button>
         </CardHeader>
         <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
           <ScrollArea className="flex-1 pr-4 -mr-4" ref={scrollAreaRef}>
