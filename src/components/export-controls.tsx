@@ -14,8 +14,10 @@ export function ExportControls({ previewRef }: ExportControlsProps) {
 
     const handlePrint = () => {
         document.body.classList.add('printing');
-        window.print();
-        document.body.classList.remove('printing');
+        requestAnimationFrame(() => {
+            window.print();
+            document.body.classList.remove('printing');
+        });
     };
     
     const handleDocxExport = () => {

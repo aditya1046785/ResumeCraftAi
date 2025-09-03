@@ -88,15 +88,16 @@ body {
 }
 
 @media print {
-  body.printing * {
+  .printing #resume-container {
+    display: block;
+  }
+  .printing * {
     visibility: hidden;
   }
-
-  body.printing #resume-preview, body.printing #resume-preview * {
+  .printing #resume-preview, .printing #resume-preview * {
     visibility: visible;
   }
-
-  body.printing #resume-preview {
+  .printing #resume-preview {
     position: absolute;
     left: 0;
     top: 0;
@@ -107,9 +108,5 @@ body {
     padding: 0;
     border: none;
     -webkit-print-color-adjust: exact;
-  }
-
-  .no-print {
-    display: none !important;
   }
 }
