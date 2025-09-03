@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { useReactToPrint } from 'react-to-print';
 import { Button } from './ui/button';
 import { Download, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -13,10 +12,9 @@ interface ExportControlsProps {
 export function ExportControls({ previewRef }: ExportControlsProps) {
     const { toast } = useToast();
 
-    const handlePrint = useReactToPrint({
-        content: () => previewRef.current,
-        documentTitle: 'resume',
-    });
+    const handlePrint = () => {
+        window.print();
+    };
     
     const handleDocxExport = () => {
         toast({
@@ -26,7 +24,7 @@ export function ExportControls({ previewRef }: ExportControlsProps) {
     };
 
     return (
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row gap-4 mb-6 no-print">
             <Button onClick={handlePrint}>
                 <Download className="mr-2 h-4 w-4" />
                 Export as PDF
