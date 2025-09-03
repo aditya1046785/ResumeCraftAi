@@ -104,7 +104,7 @@ function BuildPageContent() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
       {/* Chat Panel */}
-      <Card className="flex flex-col h-full">
+      <Card className="flex flex-col h-full overflow-hidden">
         <CardHeader>
           <CardTitle>Resume Conversation</CardTitle>
           <CardDescription>Let&apos;s build your resume together. Answer the questions below.</CardDescription>
@@ -139,14 +139,14 @@ function BuildPageContent() {
       </Card>
 
       {/* Preview Panel */}
-      <div className="h-full flex flex-col">
+      <div className="h-full flex flex-col overflow-hidden">
         <ScrollArea className="flex-1">
           <Card>
-            <CardContent className="p-0">
-              <div className="p-6">
-                <h2 className="text-2xl font-bold mb-4">Live Preview</h2>
+            <CardHeader>
+                 <h2 className="text-2xl font-bold">Live Preview</h2>
                 <ExportControls previewRef={previewRef} />
-              </div>
+            </CardHeader>
+            <CardContent className="p-0">
               <div className="bg-gray-100 p-8">
                 <ResumePreview ref={previewRef} />
               </div>
