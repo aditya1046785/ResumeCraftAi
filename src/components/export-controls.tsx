@@ -14,46 +14,53 @@ export function ExportControls({ previewRef }: ExportControlsProps) {
 
     const handlePrint = () => {
         if (!previewRef.current) return;
-    
+
         const printWindow = window.open('', '', 'height=800,width=800');
-    
+
         if (printWindow) {
-            const resumeContent = previewRef.current.innerHTML;
+            const resumeHTML = previewRef.current.outerHTML;
+
+            // Find the main stylesheet URL
+            const styleSheet = Array.from(document.styleSheets).find(ss => ss.href && ss.href.includes('app/globals.css'));
+            const cssLink = styleSheet ? `<link rel="stylesheet" href="${styleSheet.href}">` : '';
             
-            // Get all style sheets from the main document
-            const styles = Array.from(document.styleSheets)
-                .map((styleSheet) => {
-                    try {
-                        return Array.from(styleSheet.cssRules)
-                            .map((rule) => rule.cssText)
-                            .join('');
-                    } catch (e) {
-                        console.warn('Could not read stylesheet:', e);
-                        return '';
-                    }
-                })
-                .join('\n');
-    
             printWindow.document.write(`
                 <html>
                     <head>
                         <title>Print Resume</title>
-                        <style>${styles}</style>
+                        ${cssLink}
+                        <style>
+                            @media print {
+                                body { 
+                                    margin: 0; 
+                                    padding: 0;
+                                    -webkit-print-color-adjust: exact !important;
+                                    print-color-adjust: exact !important;
+                                }
+                                #resume-preview { 
+                                    box-shadow: none !important; 
+                                    margin: 0 !important;
+                                    border: none !important;
+                                }
+                            }
+                        </style>
                     </head>
                     <body>
-                        ${resumeContent}
+                        ${resumeHTML}
                     </body>
                 </html>
             `);
-    
+
             printWindow.document.close();
-            printWindow.focus();
             
-            // Use a timeout to ensure all content is loaded before printing
-            setTimeout(() => {
-                printWindow.print();
-                printWindow.close();
-            }, 250);
+            printWindow.onload = () => {
+              setTimeout(() => {
+                  printWindow.focus();
+                  printWindow.print();
+                  printWindow.close();
+              }, 250); // A small delay to ensure styles are applied
+            };
+
         } else {
             toast({
                 title: "Print Failed",
