@@ -28,7 +28,7 @@ function ChatPanel() {
   const [userInput, setUserInput] = useState('');
   const [isInitialized, setIsInitialized] = useState(false);
   
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const scrollViewportRef = useRef<HTMLDivElement>(null);
 
   const startConversation = async () => {
     setIsLoading(true);
@@ -66,11 +66,8 @@ function ChatPanel() {
   }, [isInitialized]);
 
   useEffect(() => {
-    if (scrollAreaRef.current) {
-      const scrollElement = scrollAreaRef.current.querySelector('div[style*="overflow: scroll"]');
-      if (scrollElement) {
-        scrollElement.scrollTop = scrollElement.scrollHeight;
-      }
+    if (scrollViewportRef.current) {
+        scrollViewportRef.current.scrollTop = scrollViewportRef.current.scrollHeight;
     }
   }, [history]);
 
@@ -139,7 +136,7 @@ function ChatPanel() {
           </Button>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden lg:p-0">
-        <ScrollArea className="flex-1 pr-4 -mr-4" ref={scrollAreaRef}>
+        <ScrollArea className="flex-1 pr-4 -mr-4" viewportRef={scrollViewportRef}>
           {history.map(renderMessage)}
            {isLoading && history.length > 0 && (
               <div className="flex items-start gap-3 my-4">
