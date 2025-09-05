@@ -20,25 +20,20 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 
-function BuildPageContent() {
-  const searchParams = useSearchParams();
-  const { resumeData, setResumeData, history, setHistory, addMessage, clearChat } = useResumeStore();
-
+function ChatPanel() {
+  const { history, addMessage, setHistory, clearChat, setResumeData } = useResumeStore();
   const [isLoading, setIsLoading] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [userInput, setUserInput] = useState('');
   const [isInitialized, setIsInitialized] = useState(false);
-
-  const previewRef = useRef<HTMLDivElement>(null);
+  
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-
 
   const startConversation = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      // Use a fresh, empty history for the initial call
       const result = await askResumeQuestion({ history: [] });
       addMessage({ role: 'model', text: result.question });
     } catch (e: any) {
@@ -52,19 +47,15 @@ function BuildPageContent() {
         setIsLoading(false);
     }
   };
-  
-  // Start conversation on component mount only if history is empty
+
   useEffect(() => {
     if (!isInitialized) {
         setIsInitialized(true);
-        // We need to make sure Zustand has rehydrated the state from localStorage
-        // before we decide to start a new conversation.
         setTimeout(() => {
             const currentHistory = useResumeStore.getState().history;
             if (currentHistory.length === 0) {
                 startConversation();
             } else {
-                // If there's history, check if the last message was the completion message
                 const lastMessage = currentHistory[currentHistory.length - 1];
                 if(lastMessage?.text.includes("I've drafted your resume")) {
                     setIsComplete(true);
@@ -74,10 +65,8 @@ function BuildPageContent() {
     }
   }, [isInitialized]);
 
-
   useEffect(() => {
     if (scrollAreaRef.current) {
-      // A bit of a hack to get the underlying div from ScrollArea
       const scrollElement = scrollAreaRef.current.querySelector('div[style*="overflow: scroll"]');
       if (scrollElement) {
         scrollElement.scrollTop = scrollElement.scrollHeight;
@@ -99,7 +88,6 @@ function BuildPageContent() {
 
     try {
       const result = await askResumeQuestion({ history: currentHistory });
-      
       addMessage({ role: 'model', text: result.question });
       
       if (result.isComplete) {
@@ -107,7 +95,6 @@ function BuildPageContent() {
         setIsComplete(true);
       }
     } catch (e: any) {
-      // Revert optimistic update on error
       setHistory(history);
       if (e.message && (e.message.includes('503') || e.message.includes('overloaded'))) {
         setError('The AI model is currently overloaded. Please wait a moment and send your message again.');
@@ -139,68 +126,74 @@ function BuildPageContent() {
     </div>
   );
 
-  const ChatPanel = () => (
-     <Card className="flex flex-col h-full max-h-full overflow-hidden no-print lg:border-0 lg:shadow-none">
-        <CardHeader className="flex-row items-center justify-between lg:p-0 lg:pb-6">
-            <div>
-              <CardTitle>Resume Conversation</CardTitle>
-              <CardDescription>Let&apos;s build your resume together. Answer the questions below.</CardDescription>
-            </div>
-            <Button variant="outline" size="sm" onClick={handleStartOver}>
-              <RotateCcw className="mr-2 h-4 w-4" />
-              Start Over
+  return (
+    <Card className="flex flex-col h-full max-h-full overflow-hidden no-print lg:border-0 lg:shadow-none">
+      <CardHeader className="flex-row items-center justify-between lg:p-0 lg:pb-6">
+          <div>
+            <CardTitle>Resume Conversation</CardTitle>
+            <CardDescription>Let&apos;s build your resume together. Answer the questions below.</CardDescription>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleStartOver}>
+            <RotateCcw className="mr-2 h-4 w-4" />
+            Start Over
+          </Button>
+      </CardHeader>
+      <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden lg:p-0">
+        <ScrollArea className="flex-1 pr-4 -mr-4" ref={scrollAreaRef}>
+          {history.map(renderMessage)}
+           {isLoading && history.length > 0 && (
+              <div className="flex items-start gap-3 my-4">
+                  <Avatar className="w-8 h-8">
+                      <AvatarFallback>AI</AvatarFallback>
+                  </Avatar>
+                  <div className="rounded-lg px-4 py-2 bg-muted flex items-center">
+                      <Loader2Icon className="h-5 w-5 animate-spin text-muted-foreground" />
+                  </div>
+              </div>
+          )}
+          {error && <p className="text-destructive text-sm text-center py-2">{error}</p>}
+        </ScrollArea>
+         <form onSubmit={handleSendMessage} className="flex items-center gap-2 pt-4 border-t">
+            <Input
+              value={userInput}
+              onChange={(e) => setUserInput(e.target.value)}
+              placeholder={isComplete ? "The conversation has ended." : "Type your answer..."}
+              disabled={isLoading || isComplete}
+            />
+            <Button type="submit" disabled={isLoading || isComplete} size="icon">
+              <Send className="h-4 w-4" />
             </Button>
-        </CardHeader>
-        <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden lg:p-0">
-          <ScrollArea className="flex-1 pr-4 -mr-4" ref={scrollAreaRef}>
-            {history.map(renderMessage)}
-             {isLoading && history.length > 0 && (
-                <div className="flex items-start gap-3 my-4">
-                    <Avatar className="w-8 h-8">
-                        <AvatarFallback>AI</AvatarFallback>
-                    </Avatar>
-                    <div className="rounded-lg px-4 py-2 bg-muted flex items-center">
-                        <Loader2Icon className="h-5 w-5 animate-spin text-muted-foreground" />
-                    </div>
-                </div>
-            )}
-            {error && <p className="text-destructive text-sm text-center py-2">{error}</p>}
-          </ScrollArea>
-           <form onSubmit={handleSendMessage} className="flex items-center gap-2 pt-4 border-t">
-              <Input
-                value={userInput}
-                onChange={(e) => setUserInput(e.target.value)}
-                placeholder={isComplete ? "The conversation has ended." : "Type your answer..."}
-                disabled={isLoading || isComplete}
-              />
-              <Button type="submit" disabled={isLoading || isComplete} size="icon">
-                <Send className="h-4 w-4" />
-              </Button>
-            </form>
-        </CardContent>
-      </Card>
+          </form>
+      </CardContent>
+    </Card>
   );
+}
 
-  const PreviewPanel = () => (
-     <div id="resume-container" className="h-full flex flex-col overflow-hidden">
-        <Card className="flex flex-col h-full lg:border-0 lg:shadow-none">
-            <CardHeader className='flex-row justify-between items-center no-print lg:p-0 lg:pb-6'>
-                 <div>
-                    <h2 className="text-2xl font-bold">Live Preview</h2>
-                 </div>
-                <ExportControls previewRef={previewRef} />
-            </CardHeader>
-            <CardContent className="p-0 flex-1 overflow-hidden">
-              <ScrollArea className="h-full">
-                <div className="bg-gray-100 p-2 sm:p-8">
-                    <ResumePreview ref={previewRef} />
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-      </div>
+function PreviewPanel() {
+  const previewRef = useRef<HTMLDivElement>(null);
+  return (
+    <div id="resume-container" className="h-full flex flex-col overflow-hidden">
+      <Card className="flex flex-col h-full lg:border-0 lg:shadow-none">
+          <CardHeader className='flex-row justify-between items-center no-print lg:p-0 lg:pb-6'>
+               <div>
+                  <h2 className="text-2xl font-bold">Live Preview</h2>
+               </div>
+              <ExportControls previewRef={previewRef} />
+          </CardHeader>
+          <CardContent className="p-0 flex-1 overflow-hidden">
+            <ScrollArea className="h-full">
+              <div className="bg-gray-100 p-2 sm:p-8">
+                  <ResumePreview ref={previewRef} />
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+    </div>
   );
+}
 
+
+function BuildPageContent() {
   return (
     <>
       {/* Desktop View */}
