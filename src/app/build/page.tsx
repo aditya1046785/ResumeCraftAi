@@ -125,17 +125,17 @@ function ChatPanel() {
 
   return (
     <Card className="flex flex-col h-full max-h-full overflow-hidden no-print lg:border-0 lg:shadow-none">
-      <CardHeader className="flex-row items-center justify-between lg:p-0 lg:pb-6">
+      <CardHeader className="flex-row items-center justify-between p-4 lg:p-0 lg:pb-6">
           <div>
             <CardTitle>Resume Conversation</CardTitle>
-            <CardDescription>Let&apos;s build your resume together. Answer the questions below.</CardDescription>
+            <CardDescription className="hidden sm:block">Let&apos;s build your resume together.</CardDescription>
           </div>
           <Button variant="outline" size="sm" onClick={handleStartOver}>
             <RotateCcw className="mr-2 h-4 w-4" />
             Start Over
           </Button>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden lg:p-0">
+      <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden p-0 sm:p-4 lg:p-0">
         <ScrollArea className="flex-1 pr-4 -mr-4" viewportRef={scrollViewportRef}>
           {history.map(renderMessage)}
            {isLoading && history.length > 0 && (
@@ -216,7 +216,7 @@ function BuildPageContent() {
           </TabsList>
           <TabsContent value="chat" className="flex-1 overflow-hidden">
             <Card className="h-full border-0 shadow-none">
-                <CardContent className="p-4 h-full">
+                <CardContent className="p-0 h-full">
                     <ChatPanel />
                 </CardContent>
             </Card>
