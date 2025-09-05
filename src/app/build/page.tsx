@@ -17,6 +17,7 @@ import { Loader2Icon } from '@/components/icons';
 import { Send, RotateCcw } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 
 function BuildPageContent() {
@@ -138,11 +139,9 @@ function BuildPageContent() {
     </div>
   );
 
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
-      {/* Chat Panel */}
-      <Card className="flex flex-col h-full max-h-full overflow-hidden no-print">
-        <CardHeader className="flex-row items-center justify-between">
+  const ChatPanel = () => (
+     <Card className="flex flex-col h-full max-h-full overflow-hidden no-print lg:border-0 lg:shadow-none">
+        <CardHeader className="flex-row items-center justify-between lg:p-0 lg:pb-6">
             <div>
               <CardTitle>Resume Conversation</CardTitle>
               <CardDescription>Let&apos;s build your resume together. Answer the questions below.</CardDescription>
@@ -152,7 +151,7 @@ function BuildPageContent() {
               Start Over
             </Button>
         </CardHeader>
-        <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
+        <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden lg:p-0">
           <ScrollArea className="flex-1 pr-4 -mr-4" ref={scrollAreaRef}>
             {history.map(renderMessage)}
              {isLoading && history.length > 0 && (
@@ -180,11 +179,12 @@ function BuildPageContent() {
             </form>
         </CardContent>
       </Card>
+  );
 
-      {/* Preview Panel */}
-      <div id="resume-container" className="h-full flex flex-col overflow-hidden">
-        <Card className="flex flex-col h-full">
-            <CardHeader className='flex-row justify-between items-center no-print'>
+  const PreviewPanel = () => (
+     <div id="resume-container" className="h-full flex flex-col overflow-hidden">
+        <Card className="flex flex-col h-full lg:border-0 lg:shadow-none">
+            <CardHeader className='flex-row justify-between items-center no-print lg:p-0 lg:pb-6'>
                  <div>
                     <h2 className="text-2xl font-bold">Live Preview</h2>
                  </div>
@@ -192,21 +192,62 @@ function BuildPageContent() {
             </CardHeader>
             <CardContent className="p-0 flex-1 overflow-hidden">
               <ScrollArea className="h-full">
-                <div className="bg-gray-100 p-8">
+                <div className="bg-gray-100 p-2 sm:p-8">
                     <ResumePreview ref={previewRef} />
                 </div>
               </ScrollArea>
             </CardContent>
           </Card>
       </div>
-    </div>
+  );
+
+  return (
+    <>
+      {/* Desktop View */}
+      <div className="hidden lg:grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
+        <Card className="flex flex-col h-full max-h-full overflow-hidden no-print">
+          <CardContent className="p-6 h-full">
+            <ChatPanel />
+          </CardContent>
+        </Card>
+        <Card className="flex flex-col h-full max-h-full overflow-hidden no-print">
+          <CardContent className="p-6 h-full">
+             <PreviewPanel />
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Mobile View */}
+      <div className="lg:hidden h-full">
+        <Tabs defaultValue="chat" className="w-full h-full flex flex-col">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="chat">Chat</TabsTrigger>
+            <TabsTrigger value="preview">Preview</TabsTrigger>
+          </TabsList>
+          <TabsContent value="chat" className="flex-1 overflow-hidden">
+            <Card className="h-full border-0 shadow-none">
+                <CardContent className="p-4 h-full">
+                    <ChatPanel />
+                </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="preview" className="flex-1 overflow-hidden">
+             <Card className="h-full border-0 shadow-none">
+                <CardContent className="p-0 sm:p-4 h-full">
+                    <PreviewPanel />
+                </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </>
   );
 }
 
 export default function BuildPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <div className="container mx-auto px-4 py-8 h-[calc(100vh-4rem)]">
+      <div className="container mx-auto px-4 py-8 h-[calc(100vh-4rem-1px)]">
         <BuildPageContent />
       </div>
     </Suspense>
